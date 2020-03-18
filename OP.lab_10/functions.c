@@ -1,243 +1,282 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "students.h"
 
-unsigned ReadStudentData(FILE* file, List** root)
+unsigned ReadStudentData(FILE* pFile, SList** ppRoot)
 {
-	if (file == NULL) return 0;
+	if (pFile == NULL) {
+		return 0;
+	}
 
-	*root = NULL;
-	Student student;
+	*ppRoot = NULL;
+	SStudent student;
 	int i = 0, j = 0;
 
-	while (!feof(file))
-	{
-		if (fscanf(file, "%s %s %u %u %u",
-			&student.surname,
-			&student.name,
-			&student.birthday.day,
-			&student.birthday.month,
-			&student.birthday.year) != 5) return 0;
+	while (!feof(pFile)) {
+		if (fscanf(pFile, "%s %s %u %u %u",
+			&student.chSurname,
+			&student.chName,
+			&student.Birthday.nDay,
+			&student.Birthday.nMonth,
+			&student.Birthday.nYear) != 5) {
+			return 0;
+		}
 
-		for (j = 0; j < MARKS_LEN; ++j)
-			if (!fscanf(file, "%d", &student.scores[j])) return 0;
+		for (j = 0; j < MARKS_LEN; ++j) {
+			if (!fscanf(pFile, "%d", &student.nScores[j])) {
+				return 0;
+			}
+		}
 
-		AddStudent(root, student);
+		AddStudent(ppRoot, student);
 		++i;
 	}
 
 	return i;
 }
-
-void PrintList(List* root)
+//--------------------------------------------------------------------------------
+void PrintList(SList* pRoot,FILE *pOut)
 {
-	while (root != NULL)
-	{
-		printf("%-12s %-12s %02u.%02u.%u\t", root->student.surname, root->student.name,
-			root->student.birthday.day, root->student.birthday.month, root->student.birthday.year);
-		for (int i = 0; i < MARKS_LEN; ++i) printf("%d ", root->student.scores[i]);
-		printf("\n");
-		root = root->next;
-	}
-}
-
-void PrintListOfBest(List* root)
-{
-	double averageScore = GetAverageGroupScore(root);
-	while (root != NULL)
-	{
-		if (GetAverage(root->student.scores, MARKS_LEN) > averageScore)
-		{
-			printf("%-12s %-12s %02u.%02u.%u\t", root->student.surname, root->student.name,
-				root->student.birthday.day, root->student.birthday.month, root->student.birthday.year);
-			for (int i = 0; i < MARKS_LEN; ++i) printf("%d ", root->student.scores[i]);
-			printf("\n");
+	while (pRoot != NULL){
+		printf("%-12s %-12s %02u.%02u.%u\t", pRoot->student.chSurname, pRoot->student.chName,
+			pRoot->student.Birthday.nDay, pRoot->student.Birthday.nMonth, pRoot->student.Birthday.nYear);
+		fprintf(pOut,"%-12s %-12s %02u.%02u.%u\t", pRoot->student.chSurname, pRoot->student.chName,
+			pRoot->student.Birthday.nDay, pRoot->student.Birthday.nMonth, pRoot->student.Birthday.nYear);
+		
+		for (int i = 0; i < MARKS_LEN; ++i) {
+			printf("%d ", pRoot->student.nScores[i]);
+			fprintf(pOut,"%d ", pRoot->student.nScores[i]);
+			
 		}
-		root = root->next;
+		printf("\n");
+		fprintf(pOut,"\n");
+		pRoot = pRoot->pNext;
 	}
 }
-
-int Compare(Birthday student1, Birthday student2)
+//--------------------------------------------------------------------------------
+void PrintListOfBest(SList* pRoot,FILE *pOut)
 {
-	if ((student1.year < student2.year)
-		|| (student1.year == student2.year && student1.month < student2.month)
-		|| (student1.year == student2.year && student1.month == student2.month && student1.day < student2.day)) return 1;
-	if (student1.year == student2.year && student1.month == student2.month && student1.day == student2.day) return 0;
+	double dAverageScore = GetAverageGroupScore(pRoot);
+	while (pRoot != NULL) {
+		if (GetAverage(pRoot->student.nScores, MARKS_LEN) > dAverageScore) {
+			printf("%-12s %-12s %02u.%02u.%u\t", pRoot->student.chSurname, pRoot->student.chName,
+				pRoot->student.Birthday.nDay, pRoot->student.Birthday.nMonth, pRoot->student.Birthday.nYear);
+			fprintf(pOut,"%-12s %-12s %02u.%02u.%u\t", pRoot->student.chSurname, pRoot->student.chName,
+				pRoot->student.Birthday.nDay, pRoot->student.Birthday.nMonth, pRoot->student.Birthday.nYear);
+
+			for (int i = 0; i < MARKS_LEN; ++i) {
+				printf("%d ", pRoot->student.nScores[i]);
+				fprintf(pOut,"%d ", pRoot->student.nScores[i]);
+			}
+			printf("\n");
+		    fprintf(pOut,"\n");
+		}
+		pRoot = pRoot->pNext;
+	}
+}
+//--------------------------------------------------------------------------------
+int Compare(SBirthday student1, SBirthday student2)
+{
+	if ((student1.nYear < student2.nYear)
+		|| (student1.nYear == student2.nYear && student1.nMonth < student2.nMonth)
+		|| (student1.nYear == student2.nYear && student1.nMonth == student2.nMonth && student1.nDay < student2.nDay)) {
+		return 1;
+	}
+	if (student1.nYear == student2.nYear && student1.nMonth == student2.nMonth && student1.nDay == student2.nDay) {
+		return 0;
+	}
 	return -1;
 }
-
-List* swap(List* lst1, List* lst2, List* root)
+//--------------------------------------------------------------------------------
+SList* swap(SList *pLst1, SList *pLst2, SList *pRoot)
 {
-	List* prev1, * prev2, * next1, * next2;
-	prev1 = root;
-	prev2 = root;
-	if (prev1 == lst1)
+	SList *prev1, *prev2, *next1, *next2;
+	prev1 = pRoot;
+	prev2 = pRoot;
+	next1 = pLst1->pNext;
+	next2 = pLst2->pNext;
+	if (prev1 == pLst1) {
 		prev1 = NULL;
-	else
-		while (prev1->next != lst1)
-			prev1 = prev1->next;
-	if (prev2 == lst2)
-		prev2 = NULL;
-	else
-		while (prev2->next != lst2)
-			prev2 = prev2->next;
-	next1 = lst1->next;
-	next2 = lst2->next;
-	if (lst2 == next1)
-	{
-		lst2->next = lst1;
-		lst1->next = next2;
-		if (lst1 != root)
-			prev1->next = lst2;
-	}
-	else
-		if (lst1 == next2)
-		{
-			lst1->next = lst2;
-			lst2->next = next1;
-			if (lst2 != root)
-				prev2->next = lst2;
+	} else {
+		while (prev1->pNext != pLst1) {
+			prev1 = prev1->pNext;
 		}
-		else
-		{
-			if (lst1 != root)
-				prev1->next = lst2;
-			lst2->next = next1;
-			if (lst2 != root)
-				prev2->next = lst1;
-			lst1->next = next2;
-		}
-	if (lst1 == root)
-		return(lst2);
-	if (lst2 == root)
-		return(lst1);
-	return(root);
-}
-
-void AddStudent(List** root, Student student)
-{
-	List* element = (List*)malloc(sizeof(List));
-	if (element == NULL) return;
-
-	element->student = student;
-	element->next = (*root == NULL ? NULL : *root);
-	*root = element;
-}
-
-void RemoveStudents(List** root)
-{
-	if (root == NULL) return;
-
-	List* tmp, * tmp2;
-	while (*root != NULL && GetAverage((*root)->student.scores, MARKS_LEN) < LIMIT)
-	{
-		tmp = (*root)->next;
-		free(*root);
-		*root = tmp;
 	}
-
-	tmp = *root;
-	if (*root == NULL)
+		if (prev2 == pLst2) {
+			prev2 = NULL;
+		} else {
+			while (prev2->pNext != pLst2) {
+				prev2 = prev2->pNext;
+			}
+			next1 = pLst1->pNext;
+			next2 = pLst2->pNext;
+		}
+		if (pLst2 == next1) {
+			pLst2->pNext = pLst1;
+			pLst1->pNext = next2;
+			if (pLst1 != pRoot) {
+				prev1->pNext = pLst2;
+			}
+		} else {
+			if (pLst1 == next2) {
+				pLst1->pNext = pLst2;
+				pLst2->pNext = next1;
+				if (pLst2 != pRoot) {
+					prev2->pNext = pLst2;
+				}
+			} else {
+				if (pLst1 != pRoot) {
+					prev1->pNext = pLst2;
+				}
+				pLst2->pNext = next1;
+			} if (pLst2 != pRoot) {
+				prev2->pNext = pLst1;
+			}
+			pLst1->pNext = next2;
+		}
+		
+		if (pLst1 == pRoot) {
+			return (pLst2);
+		}
+		if (pLst2 == pRoot) {
+			return(pLst1);
+		}
+	return(pRoot);
+}
+//--------------------------------------------------------------------------------
+void AddStudent(SList** ppRoot, SStudent student)
+{
+	SList* pElement = (SList*)malloc(sizeof(SList));
+	if (pElement == NULL) {
 		return;
-	while (tmp->next != NULL)
-	{
-		if (GetAverage(tmp->next->student.scores, MARKS_LEN) < LIMIT)
-		{
-			tmp2 = tmp->next->next;
-			free(tmp->next);
-			tmp->next = tmp2;
+	}
+
+	pElement->student = student;
+	pElement->pNext = (*ppRoot == NULL ? NULL : *ppRoot);
+	*ppRoot = pElement;
+}
+//--------------------------------------------------------------------------------
+void RemoveStudents(SList** ppRoot)
+{
+	if (ppRoot == NULL) {
+		return;
+	}
+
+	SList *tmp, *tmp2;
+	while (*ppRoot != NULL && GetAverage((*ppRoot)->student.nScores, MARKS_LEN) < LIMIT) {
+		tmp = (*ppRoot)->pNext;
+		free(*ppRoot);
+		*ppRoot = tmp;
+	}
+
+	tmp = *ppRoot;
+	if (*ppRoot == NULL) {
+		return;
+	}
+	while (tmp->pNext != NULL) {
+		if (GetAverage(tmp->pNext->student.nScores, MARKS_LEN) < LIMIT) {
+			tmp2 = tmp->pNext->pNext;
+			free(tmp->pNext);
+			tmp->pNext = tmp2;
+		} else {
+			tmp = tmp->pNext;
 		}
-		else tmp = tmp->next;
 	}
 }
-
-void FreeList(List** root)
+//--------------------------------------------------------------------------------
+void FreeList(SList** ppRoot)
 {
-	List* element = *root;
-	if (!element)
+	SList* pElement = *ppRoot;
+	if (!pElement) {
 		printf("List is empty\n");
-	while (element)
-	{
-		*root = element->next;
-		free(element);
-		element = *root;
+	}
+	while (pElement) {
+		*ppRoot = pElement->pNext;
+		free(pElement);
+		pElement = *ppRoot;
 	}
 }
-
-Student GetStudent()
+//--------------------------------------------------------------------------------
+SStudent GetStudent()
 {
-	Student student;
+	SStudent student;
 	char* subjects[] = { "Math", "History", "Biology", "Physics", "English" };
 	printf("Enter information about a new student:\n");
 	printf("1.Last name: ");
-	scanf("%s", &student.name);
+	scanf("%s", &student.chName);
 	printf("2.First name: ");
-	scanf("%s", &student.surname);
+	scanf("%s", &student.chSurname);
 
 	printf("3.Birth day: ");
-	while (!scanf("%u", &student.birthday.day) || student.birthday.day < 1 || student.birthday.day > 31)
+	while (!scanf("%u", &student.Birthday.nDay) || student.Birthday.nDay < 1 || student.Birthday.nDay > 31) {
 		printf("Incorrect value\n");
+	}
 	printf("4.Birth month: ");
-	while (!scanf("%u", &student.birthday.month) || student.birthday.month < 1 || student.birthday.month > 12)
+	while (!scanf("%u", &student.Birthday.nMonth) || student.Birthday.nMonth < 1 || student.Birthday.nMonth > 12) {
 		printf("Incorrect value\n");
+	}
 	printf("5.Birth year: ");
-	while (!scanf("%u", &student.birthday.year) || student.birthday.year > YEAR_MAX)
+	while (!scanf("%u", &student.Birthday.nYear) || student.Birthday.nYear > YEAR_MAX) {
 		printf("Incorrect value\n");
+	}
 
-	for (int i = 0; i < MARKS_LEN; ++i)
-	{
+	for (int i = 0; i < MARKS_LEN; ++i) {
 		printf("- %s score: ", subjects[i]);
-		while (!scanf("%d", &student.scores[i]) || student.scores[i] < 0 || student.scores[i] > SCORE_MAX)
+		while (!scanf("%d", &student.nScores[i]) || student.nScores[i] < 0 || student.nScores[i] > SCORE_MAX) {
 			printf("Incorrect value\n");
+		}
 	}
 
 	return student;
 }
-
-double GetAverageGroupScore(List* root)
+//--------------------------------------------------------------------------------
+double GetAverageGroupScore(SList* pRoot)
 {
-	unsigned amount = 0;
-	long sum = 0;
+	int nAmount = 0;
+	long lSum = 0;
 
-	while (root != NULL)
-	{
-		for (unsigned i = 0; i < MARKS_LEN; ++i)
-			sum += root->student.scores[i];
-		root = root->next;
-		++amount;
+	while (pRoot != NULL) {
+		for (unsigned i = 0; i < MARKS_LEN; ++i) {
+			lSum += pRoot->student.nScores[i];
+		}
+		pRoot = pRoot->pNext;
+		++nAmount;
 	}
 
-	return 1.0 * sum / (amount * MARKS_LEN);
+	return 1.0 * lSum / (nAmount * MARKS_LEN);
 }
-
-double GetAverage(int scores[], unsigned size)
+//--------------------------------------------------------------------------------
+double GetAverage(int nScores[], unsigned nSize)
 {
-	int sum = 0;
-	for (unsigned i = 0; i < size; ++i) sum += scores[i];
+	int nSum = 0;
+	for (unsigned i = 0; i < nSize; ++i) {
+		nSum += nScores[i];
+	}
 
-	return 1.0 * sum / size;
+	return 1.0 * nSum / nSize;
 }
-
-void SortByDate(List** root)
+//--------------------------------------------------------------------------------
+void SortByDate(SList** ppRoot)
 {
-	List* min;
-	List* tmp;
-	List* selected = *root;
-	while (selected != NULL)
-	{
-		min = selected;
-		tmp = selected->next;
-		while (tmp != NULL)
-		{
-			if (Compare(min->student.birthday, tmp->student.birthday) < 0) min = tmp;
-			tmp = tmp->next;
+	SList* min;
+	SList* tmp;
+	SList* pSelected = *ppRoot;
+	while (pSelected != NULL) {
+		min = pSelected;
+		tmp = pSelected->pNext;
+		while (tmp != NULL) {
+			if (Compare(min->student.Birthday, tmp->student.Birthday) < 0) {
+				min = tmp;
+			}
+			tmp = tmp->pNext;
 		}
-		if (min != selected)
-		{
-			*root = swap(selected, min, *root);
-			selected = min->next;
+		if (min != pSelected) {
+			*ppRoot = swap(pSelected, min, *ppRoot);
+			pSelected = min->pNext;
+		} else {
+			pSelected = pSelected->pNext;
 		}
-		else selected = selected->next;
 	}
 }

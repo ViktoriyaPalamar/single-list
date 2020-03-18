@@ -8,38 +8,58 @@
 #define SCORE_MAX 5
 #define LIMIT  4.5
 
-typedef struct
-{
-	unsigned int day;
-	unsigned int month;
-	unsigned int year;
-} Birthday;
+typedef struct{
+	unsigned int nDay;
+	unsigned int nMonth;
+	unsigned int nYear;
+} SBirthday;
 
-typedef struct
-{
-	char name[NAME];
-	char surname[SURNAME];
-	Birthday birthday;
-	int scores[MARKS_LEN];
-} Student;
+typedef struct{
+	char chName[NAME];
+	char chSurname[SURNAME];
+	SBirthday Birthday;
+	int nScores[MARKS_LEN];
+} SStudent;
 
-typedef struct StudentList
-{
-	Student student;
-	struct StudentList* next;
-} List;
+typedef struct SStudentList{
+	SStudent student;
+	struct SStudentList* pNext;
+} SList;
 
-unsigned ReadStudentData(FILE* file, List** root);
-void PrintList(List* root);
-void PrintListOfBest(List* root);
-int Compare(Birthday student1, Birthday student2);
-List* swap(List* lst1, List* lst2, List* root);
-void AddStudent(List** root, Student student);
-void RemoveStudents(List** root);
-void FreeList(List** root);
-Student GetStudent();
-double GetAverageGroupScore(List* root);
-double GetAverage(int scores[], unsigned size);
-void SortByDate(List** root);
+//зчитує дані про студентів з файлу
+unsigned ReadStudentData(FILE* pFile, SList** ppRoot);
+
+//виведення на екран списку студентів
+void PrintList(SList* pRoot,FILE *pOut);
+
+//виведення найкращих студентів, які мають бал вище середнього
+void PrintListOfBest(SList* pRoot,FILE *pOut);
+
+//порівнює вік двох студентів, якщо умови не виконуються, повертає -1
+int Compare(SBirthday student1, SBirthday student2);
+
+//повертає вказівник на корінь списку
+SList* swap(SList* pLst1, SList* pLst2, SList* pRoot);
+
+//додає новий елемент у відсортований список
+void AddStudent(SList** ppRoot, SStudent student);
+
+//видаляє список елементів
+void RemoveStudents(SList** ppRoot);
+
+//очищує список
+void FreeList(SList** ppRoot);
+
+//повертає дані студента
+SStudent GetStudent();
+
+//повертає значення середньої оцінки в групі
+double GetAverageGroupScore(SList* pRoot);
+
+//повертає середній бал
+double GetAverage(int nScores[], unsigned nSize);
+
+//сортує дані студентів
+void SortByDate(SList** ppRoot);
 
 #endif
